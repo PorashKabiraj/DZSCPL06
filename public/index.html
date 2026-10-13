@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>DZSCPL-06</title>
+<style>
+:root{--bg:#0a0a0f;--cd:#15121f;--ln:#2b2340;--p:#8b3dff;--p2:#b388ff;--tx:#fff;--mu:#a79fbd;--hd:#0a0a0fee;--in:#0d0b15;--tg:#241a3d;--hg:linear-gradient(135deg,#2a0f55,#0a0a0f 70%);--ms:#2a0f55;--rb:#3a1030;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme=light]{--bg:#f6f3ff;--cd:#fff;--ln:#ddd3f5;--p:#7a2ff0;--p2:#6a1fd6;--tx:#14101f;--mu:#6b6482;--hd:#f6f3ffee;--in:#fff;--tg:#ece3ff;--hg:linear-gradient(135deg,#e4d5ff,#f6f3ff 70%);--ms:#ece3ff;--rb:#fde3ef}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hd);border-bottom:1px solid var(--ln);display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px}
+.logo{font-weight:800;letter-spacing:1px;color:var(--tx)}.logo b{color:var(--p2)}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+nav button,.btn{background:transparent;color:#fff;border:1px solid var(--ln);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}nav button{color:var(--tx)}nav button.on{color:#fff}
+nav button.on,.btn{background:var(--p);border-color:var(--p)}
+.btn.g{background:transparent;border-color:var(--p2);color:var(--p2)}.btn.r{background:var(--rb);color:var(--tx);border-color:#7a2a5a}.btn:disabled{opacity:.4;cursor:not-allowed}.btn.s{padding:4px 9px;font-size:13px}
+main{max-width:1000px;margin:0 auto;padding:16px 14px 60px}
+h1,h2,h3{margin:.2em 0 .5em}h2{color:var(--p2)}
+.hero{background:var(--hg);border:1px solid var(--ln);border-radius:16px;padding:22px;margin-bottom:16px}
+.hero h1{font-size:30px;margin:0}.mu{color:var(--mu)}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:14px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+label.f{display:block;margin:10px 0 4px;color:var(--mu);font-size:13px}
+input[type=text],input[type=password],input[type=number],select{width:100%;background:var(--in);color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:9px;font:inherit}
+.rg{display:flex;flex-wrap:wrap;gap:6px}.rg label{cursor:pointer}.rg input{position:absolute;opacity:0}
+.rg span{display:inline-block;padding:7px 13px;border:1px solid var(--ln);border-radius:20px}
+.rg input:checked+span{background:var(--p);border-color:var(--p);color:#fff}.rg input:focus-visible+span{outline:2px solid var(--p2)}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:12px;background:var(--tg);color:var(--p2)}.tag.w{background:var(--tx);color:var(--bg)}
+.live{color:#ff5c8a;font-weight:700}
+.big{font-size:44px;font-weight:800;color:var(--p2)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:left;white-space:nowrap}th{color:var(--mu);font-weight:600}
+td input,td select{padding:4px;min-width:70px}
+.sc{display:flex;justify-content:space-between;font-size:20px;padding:6px 0}.sc.bt b::after{content:" 🏏"}.sc small{color:var(--mu)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:0 0 auto}
+.bar{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln)}
+.msg{background:var(--ms);border:1px solid var(--p);padding:8px 12px;border-radius:8px;margin:8px 0}
+</style></head><body>
+<header><div class="logo">DZS<b>CPL</b>-06</div><nav id="nav"></nav><div id="who" class="row"></div></header>
+<main id="main"></main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+try{document.documentElement.dataset.theme=localStorage.getItem('th')||'dark'}catch(e){document.documentElement.dataset.theme='dark'}
+let db=null,S={players:[],teams:[],umps:[],matches:[],auc:null,aw:{},reg:{},admin:undefined},view='home',me=null,pend=0,note='';
+try{me=JSON.parse(sessionStorage.getItem('me'))}catch(e){}
+const T=id=>S.teams.find(t=>t.id===id),P=id=>S.players.find(p=>p.id===id),M=id=>S.matches.find(m=>m.id===id);
+const spent=t=>S.players.filter(p=>p.team===t&&p.status==='sold').reduce((a,p)=>a+(+p.price||0),0);
+const left=t=>(+t.purse||0)-spent(t.id);
+const ov=b=>Math.floor(b/6)+'.'+b%6;
+const isA=()=>me&&me.role==='admin',isU=()=>me&&(me.role==='umpire'||me.role==='admin');
+const radio=(n,o,d)=>`<div class="rg">${o.map(v=>`<label><input type="radio" name="${n}" value="${v}" ${v===d?'checked':''} required><span>${v}</span></label>`).join('')}</div>`;
+const sel=(attrs,list,cur,lab,blank)=>`<select ${attrs}>${blank!==undefined?`<option value="">${blank}</option>`:''}${list.map(x=>`<option value="${x.id??x}" ${(x.id??x)==cur?'selected':''}>${esc(lab?lab(x):x)}</option>`).join('')}</select>`;
+const SH=['Day','Morning'],TY=['Batsman','Baller','All-Rounder'],JS=['M','L','XL','XXL','XXXL','XXXXL'];
+const pf=(p={})=>`<label class="f">Player name</label><input type="text" name="name" required maxlength="60" value="${esc(p.name)}">
+<label class="f">Shift</label>${radio('shift',SH)}<label class="f">Player type</label>${radio('type',TY)}
+<label class="f">Jersey size</label>${radio('jersey',JS)}<label class="f">Do you want to be captain?</label>${radio('captain',['Yes','No'])}`;
+
+// ---------- backend (Netlify Function) ----------
+const API='/.netlify/functions/api';let OK=true,last='';
+async function call(op,body){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(me?.token||'')},body:JSON.stringify({op,...body})});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'Request failed');return j}
+async function pull(){try{const j=await call('state');OK=true;const x=JSON.stringify(j);if(x!==last){last=x;S.players=j.players;S.teams=j.teams;S.umps=j.umpires;S.matches=j.matches;S.auc=j.auction;S.aw=j.awards||{};S.reg=j.reg||{};render()}else if(!OK)render()}catch(e){if(e.message==='Session expired'){me=null;try{sessionStorage.removeItem('me')}catch(x){}}OK=false;render()}}
+async function w(op,path,data){try{await call('write',{o:op,path,data});await pull();return true}catch(e){note=e.message;render();return false}}
+const wr=(p,d)=>w('set',p,d),up=(p,d)=>w('update',p,d),del=p=>w('del',p),add=(c,d)=>w('add',c,d);
+async function api(op,b){try{await call(op,b);await pull()}catch(e){note=e.message;render()}}
+pull();setInterval(()=>{if(!document.hidden)pull()},5000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});
+
+// ---------- actions ----------
+const A={
+ go:e=>{view=e.dataset.v;note='';render()},
+ theme:()=>{const t=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=t;try{localStorage.setItem('th',t)}catch(e){}render()},
+ togReg:()=>wr('cfg/reg',{closed:!S.reg.closed}),
+ logout:()=>{me=null;try{sessionStorage.removeItem('me')}catch(e){}view='home';render()},
+ del:e=>{if(confirm('Delete this item?'))del(e.dataset.p)},
+ start:e=>{const f=e.closest('[data-box]'),pid=f.querySelector('[name=pid]').value,base=+f.querySelector('[name=base]').value||0,step=+f.querySelector('[name=step]').value||10;
+  if(!pid)return;wr('cfg/auction',{pid,base,bid:base,step,tid:'',status:'live'})},
+ rand:()=>{const a=S.players.filter(p=>p.status==='avail');if(!a.length)return;const el=$('[name=pid]');if(el)el.value=a[Math.floor(Math.random()*a.length)].id},
+ bid:e=>api('bid',{tid:e.dataset.t}),
+ sold:()=>{const a=S.auc;if(!a.tid){note='No bids yet. Mark unsold instead.';return render()}up('players/'+a.pid,{status:'sold',team:a.tid,price:a.bid});wr('cfg/auction',{status:'idle'})},
+ unsold:()=>{up('players/'+S.auc.pid,{status:'unsold'});wr('cfg/auction',{status:'idle'})},
+ cancel:()=>wr('cfg/auction',{status:'idle'}),
+ reopen:e=>up('players/'+e.dataset.id,{status:'avail',team:'',price:0}),
+ live:e=>up('matches/'+e.dataset.id,{status:'live'}),
+ swap:e=>{const m=M(e.dataset.id);up('matches/'+m.id,{bat:m.bat==='a'?'b':'a'})},
+ ball:e=>{const m=M(e.dataset.id),s=m.bat,v=e.dataset.r;let r=+m['r'+s],w=+m['w'+s],b=+m['b'+s];
+  if(v==='W'){w++;b++}else if(v==='Wd'||v==='Nb')r++;else{r+=+v;b++}up('matches/'+m.id,{['r'+s]:r,['w'+s]:w,['b'+s]:b})},
+ finish:e=>{const m=M(e.dataset.id);up('matches/'+m.id,{status:'done',win:m.ra>m.rb?'a':m.rb>m.ra?'b':'tie'})}
+};
+const F={
+ reg:async(d,f)=>{if(await add('players',{name:d.name.trim(),shift:d.shift,type:d.type,jersey:d.jersey,captain:d.captain,base:+d.base||20})){f.reset();note='Registered! See you on the field.';render()}},
+ team:async(d,f)=>{if(await add('teams',{name:d.name.trim(),captain:d.captain.trim(),pin:d.pin,purse:+d.purse||1000})){f.reset();note='Team registered!';render()}},
+ ump:(d,f)=>{if(S.umps.some(u=>u.uid===d.uid)){note='Umpire ID exists';return render()}add('umpires',{uid:d.uid.trim(),pass:d.pass,name:d.name.trim()});f.reset()},
+ match:(d,f)=>{if(d.a===d.b||!d.a||!d.b){note='Pick two different teams';return render()}
+  add('matches',{a:d.a,b:d.b,label:d.label,overs:+d.overs||6,status:'upcoming',bat:'a',ra:0,wa:0,ba:0,rb:0,wb:0,bb:0,win:'',mvp:''});f.reset()},
+ login:async d=>{try{const r=await call('login',d);me={...r.user,token:r.token};try{sessionStorage.setItem('me',JSON.stringify(me))}catch(e){}view=me.role==='admin'?'admin':me.role==='team'?'teams':'matches';note='';await pull();render()}catch(e){note=e.message;render()}},
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el)A[el.dataset.a]?.(el)});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target;F[f.dataset.f]?.(Object.fromEntries(new FormData(f)),f)});
+document.addEventListener('change',e=>{const el=e.target.closest('[data-u]');if(!el)return;const[c,id,k]=el.dataset.u.split('|');let v=el.value;if(el.dataset.n)v=+v||0;
+ c==='cfg'?wr('cfg/'+id,{...S.aw,[k]:v}):up(c+'/'+id,{[k]:v})});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(pend&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName||''))render()},60));
+
+// ---------- views ----------
+function home(){return `<div class="hero"><span class="tag">SEASON 06</span><h1>DZSCPL-06 Cricket Tournament</h1><p class="mu">Register, watch the auction, follow every ball live.</p><div class="row"><button class="btn" data-a="go" data-v="register">Register now</button><button class="btn g" data-a="go" data-v="matches">Match centre</button></div></div><div class="card"><h3>Tournament information</h3><p class="mu">Details will be added here.</p></div>`}
+
+function register(){const n=S.players.length;return `<div class="hero"><h1>Player registration</h1><p class="mu">Sign up to play in DZSCPL-06.</p>
+<div class="row"><div><div class="big">${n}</div><div class="mu">players</div></div><div style="width:24px"></div><div><div class="big">${S.teams.length}</div><div class="mu">teams</div></div></div></div>
+<div class="card"><h2>Player registration</h2>${note?`<div class="msg">${esc(note)}</div>`:''}${S.reg.closed?'<p><b>Registration for players is closed.</b></p>':`<form data-f="reg">${pf()}<br><button class="btn">Register</button></form>`}</div>
+<div class="card"><h3>Registered players</h3><div class="tw"><table><tr><th>#</th><th>Name</th><th>Type</th><th>Shift</th><th>Captain?</th></tr>${S.players.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}</td><td>${p.type}</td><td>${p.shift}</td><td>${p.captain}</td></tr>`).join('')||'<tr><td colspan=5 class="mu">No players yet</td></tr>'}</table></div></div>`}
+
+function auction(){const a=S.auc,live=a&&a.status==='live',p=live&&P(a.pid),lead=live&&T(a.tid);
+ const myT=me&&me.role==='team'?T(me.id):null;
+ let h=`<h2>Live auction</h2>${note?`<div class="msg">${esc(note)}</div>`:''}`;
+ if(live&&p)h+=`<div class="card"><span class="tag live">● ON THE BLOCK</span><h1>${esc(p.name)}</h1><div class="row"><span class="tag">${p.type}</span><span class="tag">${p.shift}</span><span class="tag">Jersey ${p.jersey}</span>${p.captain==='Yes'?'<span class="tag w">Captain candidate</span>':''}</div>
+ <div class="mu" style="margin-top:10px">Base ${a.base} · Step ${a.step}</div><div class="big">${a.bid}</div><div>${lead?`Leading: <b>${esc(lead.name)}</b>`:'<span class="mu">Waiting for first bid</span>'}</div>
+ ${isA()?`<div class="row" style="margin-top:12px"><button class="btn" data-a="sold">SOLD</button><button class="btn r" data-a="unsold">Unsold</button><button class="btn g" data-a="cancel">Cancel lot</button></div>`:''}</div>`;
+ else h+=`<div class="card mu">No player on the block right now.</div>`;
+ if(isA()&&!live){const av=S.players.filter(p=>p.status==='avail'||p.status==='unsold');
+  h+=`<div class="card" data-box><h3>Start a lot</h3><div class="row">${sel('name="pid"',av,'',p=>p.name+' ('+p.type+')','Choose player')}<button class="btn g s" data-a="rand">Random</button></div>
+  <label class="f">Base price</label><input type="number" name="base" value="20" min="0"><label class="f">Bid step</label><input type="number" name="step" value="10" min="1"><br><button class="btn" data-a="start">Start auction</button></div>`}
+ h+=`<div class="card"><h3>Teams</h3>${S.teams.map(t=>{const squad=S.players.filter(p=>p.team===t.id&&p.status==='sold');const can=live&&(isA()||(myT&&myT.id===t.id));
+  return `<div class="bar"><div><b>${esc(t.name)}</b>${lead&&lead.id===t.id?' <span class="tag w">leading</span>':''}<div class="mu">${squad.length} players · purse left ${left(t)}</div></div>${can?`<button class="btn s" data-a="bid" data-t="${t.id}" ${a.tid===t.id?'disabled':''}>Bid ${a.tid?a.bid+a.step:a.bid}</button>`:''}</div>`}).join('')||'<span class="mu">No teams yet. Register one in Teams.</span>'}</div>`;
+ if(myT)h+=`<div class="card"><h3>${esc(myT.name)} squad</h3>${S.players.filter(p=>p.team===myT.id).map(p=>`<div class="bar"><span>${esc(p.name)} <span class="tag">${p.type}</span></span><b>${p.price}</b></div>`).join('')||'<span class="mu">No players yet</span>'}</div>`;
+ const sold=S.players.filter(p=>p.status==='sold').sort((x,y)=>y.price-x.price);
+ h+=`<div class="card"><h3>Results</h3><div class="tw"><table><tr><th>Player</th><th>Type</th><th>Team</th><th>Price</th><th>Status</th>${isA()?'<th></th>':''}</tr>${S.players.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.type}</td><td>${esc(T(p.team)?.name||'-')}</td><td>${p.status==='sold'?p.price:'-'}</td><td>${p.status==='avail'?'Available':p.status==='sold'?'Sold':'Unsold'}</td>${isA()?`<td>${p.status!=='avail'?`<button class="btn g s" data-a="reopen" data-id="${p.id}">Reset</button>`:''}</td>`:''}</tr>`).join('')}</table></div>
+ ${sold[0]?`<p class="mu">Most expensive: <b style="color:var(--tx)">${esc(sold[0].name)}</b> (${sold[0].price}) → ${esc(T(sold[0].team)?.name||'')}</p>`:''}</div>`;
+ return h}
+
+function teams(){const myT=me&&me.role==='team'?T(me.id):null;
+ return `<h2>Teams</h2>${note?`<div class="msg">${esc(note)}</div>`:''}
+ ${myT?`<div class="card"><span class="tag">Your dashboard</span><h3>${esc(myT.name)}</h3><div class="mu">Captain ${esc(myT.captain)} · Purse left ${left(myT)} of ${myT.purse}</div>${S.players.filter(p=>p.team===myT.id).map(p=>`<div class="bar"><span>${esc(p.name)} <span class="tag">${p.type}</span> <span class="tag">${p.jersey}</span></span><b>${p.price}</b></div>`).join('')||'<p class="mu">Nobody yet. Watch the auction tab.</p>'}</div>`:''}
+ <div class="card"><h3>Team registration (for captains)</h3><form data-f="team"><label class="f">Team name</label><input type="text" name="name" required maxlength="40"><label class="f">Captain name</label><input type="text" name="captain" required><label class="f">Team PIN (used to log in)</label><input type="password" name="pin" required minlength="3"><label class="f">Purse</label><input type="number" name="purse" value="1000" min="0"><br><button class="btn">Register team</button></form></div>
+ <div class="grid">${S.teams.map(t=>`<div class="card"><h3>${esc(t.name)}</h3><div class="mu">Captain: ${esc(t.captain)}<br>Purse left ${left(t)}</div>${S.players.filter(p=>p.team===t.id).map(p=>`<div class="bar"><span>${esc(p.name)}</span><span class="mu">${p.price}</span></div>`).join('')}</div>`).join('')}</div>`}
+
+function ctrl(m){const sq=S.players.filter(p=>p.status==='sold'&&(p.team===m.a||p.team===m.b));
+ if(m.status==='upcoming')return `<div class="row"><button class="btn" data-a="live" data-id="${m.id}">Start match</button></div>`;
+ const num=k=>`<input type="number" min="0" style="width:70px" value="${m[k]}" data-n="1" data-u="matches|${m.id}|${k}">`;
+ return `<hr style="border-color:var(--ln)"><div class="mu">Batting: ${esc(T(m[m.bat])?.name)}</div><div class="row">${['0','1','2','3','4','6','W','Wd','Nb'].map(r=>`<button class="btn s ${r==='W'?'r':'g'}" data-a="ball" data-id="${m.id}" data-r="${r}">${r}</button>`).join('')}</div>
+ <div class="row" style="margin-top:8px"><button class="btn g s" data-a="swap" data-id="${m.id}">Switch innings</button>${sel(`data-u="matches|${m.id}|mvp"`,sq,m.mvp,p=>p.name,'Match MVP')}<button class="btn s" data-a="finish" data-id="${m.id}">Finish</button></div>
+ <details style="margin-top:8px"><summary class="mu">Manual correction</summary><div class="row">A ${num('ra')}/${num('wa')} balls ${num('ba')} · B ${num('rb')}/${num('wb')} balls ${num('bb')}</div></details>`}
+
+function mcard(m){const a=T(m.a),b=T(m.b),row=(t,s)=>`<div class="sc ${m.bat===s&&m.status==='live'?'bt':''}"><b>${esc(t?.name||'?')}</b><span>${m['r'+s]}/${m['w'+s]} <small>(${ov(m['b'+s])})</small></span></div>`;
+ const w=m.win==='a'?a?.name+' won':m.win==='b'?b?.name+' won':m.win==='tie'?'Match tied':'';
+ return `<div class="card"><div class="row" style="justify-content:space-between"><span class="tag ${m.status==='live'?'live':''}">${m.status==='live'?'● LIVE':m.status==='done'?'FINAL':'UPCOMING'}</span><span class="mu">${esc(m.label||'')} · ${m.overs} overs</span></div>${row(a,'a')}${row(b,'b')}
+ ${m.status==='done'?`<div><b>${esc(w)}</b></div>`:''}${m.mvp&&P(m.mvp)?`<div class="mu">MVP: ${esc(P(m.mvp).name)}</div>`:''}${isU()&&m.status!=='done'?ctrl(m):''}</div>`}
+
+function matches(){const ms=S.matches,st=S.teams.map(t=>{const d=ms.filter(m=>m.status==='done'&&(m.a===t.id||m.b===t.id));const w=d.filter(m=>m.win!=='tie'&&m[m.win]===t.id).length;return{t,p:d.length,w,l:d.length-w-d.filter(m=>m.win==='tie').length,pt:w*2+d.filter(m=>m.win==='tie').length}}).sort((x,y)=>y.pt-x.pt||y.w-x.w);
+ const awd=[['pot','Player of the tournament'],['mvp','Tournament MVP'],['bat','Best batsman'],['bowl','Best bowler']];
+ const lv=ms.filter(m=>m.status==='live'),up=ms.filter(m=>m.status==='upcoming'),dn=ms.filter(m=>m.status==='done');
+ return `<h2>Match centre</h2>${isU()?`<div class="msg">Umpire mode: ${esc(me.name)}. Use the scoring buttons on each match.</div>`:''}
+ ${lv.map(mcard).join('')||'<div class="card mu">No live match right now.</div>'}
+ <h3>Fixtures</h3>${up.map(mcard).join('')||'<p class="mu">No upcoming fixtures.</p>'}
+ <h3>Results</h3>${dn.map(mcard).join('')||'<p class="mu">No results yet.</p>'}
+ <div class="card"><h3>Points table</h3><div class="tw"><table><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th></tr>${st.map(r=>`<tr><td>${esc(r.t.name)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td><b>${r.pt}</b></td></tr>`).join('')}</table></div></div>
+ <div class="card"><h3>Awards</h3>${awd.map(([k,l])=>`<div class="bar"><span class="mu">${l}</span>${isU()?sel(`data-u="cfg|awards|${k}"`,S.players,S.aw[k],p=>p.name,'Select'):`<b>${esc(P(S.aw[k])?.name||'TBD')}</b>`}</div>`).join('')}</div>`}
+
+function admin(){if(!isA())return login();
+ const pr=(p,k,opts)=>sel(`data-u="players|${p.id}|${k}"`,opts,p[k]);
+ return `<h2>Admin panel</h2>${note?`<div class="msg">${esc(note)}</div>`:''}
+ <div class="card"><h3>Player registration</h3><div class="row"><span>Status: <b>${S.reg.closed?'Closed':'Open'}</b></span><button class="btn ${S.reg.closed?'':'r'} s" data-a="togReg">${S.reg.closed?'Open registration':'Close registration'}</button></div></div>
+ <div class="card"><h3>Players</h3><div class="tw"><table><tr><th>Name</th><th>Shift</th><th>Type</th><th>Jersey</th><th>Captain</th><th>Base</th><th></th></tr>${S.players.map(p=>`<tr><td><input type="text" value="${esc(p.name)}" data-u="players|${p.id}|name"></td><td>${pr(p,'shift',SH)}</td><td>${pr(p,'type',TY)}</td><td>${pr(p,'jersey',JS)}</td><td>${pr(p,'captain',['Yes','No'])}</td><td><input type="number" style="width:70px" value="${p.base}" data-n="1" data-u="players|${p.id}|base"></td><td><button class="btn r s" data-a="del" data-p="players/${p.id}">Delete</button></td></tr>`).join('')}</table></div>
+ <details><summary class="btn g s" style="display:inline-block;margin-top:10px">+ Add player</summary><form data-f="reg">${pf()}<label class="f">Base price</label><input type="number" name="base" value="20"><br><button class="btn">Add player</button></form></details></div>
+ <div class="card"><h3>Teams</h3>${S.teams.map(t=>`<div class="bar"><span><b>${esc(t.name)}</b> <span class="mu">${esc(t.captain)} · PIN ${esc(t.pin)}</span></span><span class="row">Purse <input type="number" style="width:90px" value="${t.purse}" data-n="1" data-u="teams|${t.id}|purse"><button class="btn r s" data-a="del" data-p="teams/${t.id}">Delete</button></span></div>`).join('')||'<span class="mu">Teams register themselves in the Teams tab.</span>'}</div>
+ <div class="card"><h3>Fixtures</h3><form data-f="match"><div class="row">${sel('name="a"',S.teams,'',t=>t.name,'Team A')}${sel('name="b"',S.teams,'',t=>t.name,'Team B')}<input type="text" name="label" placeholder="Match 1 / Semi-final" style="width:170px"><input type="number" name="overs" value="6" min="1" style="width:80px"><button class="btn">Add</button></div></form>
+ ${S.matches.map(m=>`<div class="bar"><span>${esc(T(m.a)?.name)} vs ${esc(T(m.b)?.name)} <span class="mu">${esc(m.label||'')}</span></span><span class="row">${sel(`data-u="matches|${m.id}|status"`,['upcoming','live','done'],m.status)}<button class="btn r s" data-a="del" data-p="matches/${m.id}">Delete</button></span></div>`).join('')}</div>
+ <div class="card"><h3>Umpires</h3><form data-f="ump"><div class="row"><input type="text" name="name" placeholder="Name" style="width:150px" required><input type="text" name="uid" placeholder="Umpire ID" style="width:150px" required><input type="text" name="pass" placeholder="Password" style="width:150px" required><button class="btn">Create</button></div></form>
+ ${S.umps.map(u=>`<div class="bar"><span>${esc(u.name)} <span class="mu">ID ${esc(u.uid)} · pass ${esc(u.pass)}</span></span><button class="btn r s" data-a="del" data-p="umpires/${u.id}">Delete</button></div>`).join('')}</div>`}
+
+function login(){return `<div class="card" style="max-width:420px;margin:auto"><h2>Login</h2>${note?`<div class="msg">${esc(note)}</div>`:''}<form data-f="login">${radio('role',['Admin','Umpire','Team'],'Admin')}
+ <label class="f">ID (team login: team name)</label><input type="text" name="id" required><label class="f">Password (team login: PIN)</label><input type="password" name="pass" required><br><button class="btn">Log in</button></form></div>`}
+
+function render(){const ae=document.activeElement;if(ae&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName)){pend=1;return}pend=0;
+ const tabs=[['home','Home'],['register','Register'],['auction','Auction'],['matches','Matches'],['teams','Teams']];if(isA())tabs.push(['admin','Admin']);
+ $('#nav').innerHTML=tabs.map(([k,l])=>`<button class="${view===k?'on':''}" data-a="go" data-v="${k}">${l}</button>`).join('');
+ $('#who').innerHTML=`<button class="btn g s" data-a="theme" aria-label="Toggle light or dark">${document.documentElement.dataset.theme==='light'?'Dark':'Light'}</button>`+(me?`<span class="mu">${esc(me.name)}</span><button class="btn g s" data-a="logout">Logout</button>`:`<button class="btn g s" data-a="go" data-v="login">Login</button>`);
+ const nodb=OK?'':'<div class="msg">Cannot reach the server. Retrying...</div>';
+ $('#main').innerHTML=nodb+({home,register,auction,matches,teams,admin,login}[view]||home)();
+ const y=scrollY;scrollTo(0,y)}
+render();
+</script></body></html>
